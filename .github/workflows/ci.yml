@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: sudo apt update && sudo apt install -y build-essential g++ pkg-config libfuse3-dev libreadline-dev docker.io
@@ -25,7 +25,7 @@ jobs:
       run: make test
 
     - name: Upload .deb as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: kubsh-deb
         path: kubsh_1.0.0_amd64.deb
