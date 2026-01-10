@@ -5,6 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-missing-field-initializers
 # Target executable
 TARGET = kubsh
 
+
 # Debian package settings
 PACKAGE_NAME = kubsh
 VERSION = 1.0.0
@@ -27,6 +28,7 @@ deb: $(TARGET)
 	cp $(TARGET) kubsh-package/usr/local/bin/kubsh
 	chmod +x kubsh-package/usr/local/bin/kubsh
 
+
 	# Create control file
 	echo "Package: $(PACKAGE_NAME)" > kubsh-package/DEBIAN/control
 	echo "Version: $(VERSION)" >> kubsh-package/DEBIAN/control
@@ -35,19 +37,29 @@ deb: $(TARGET)
 	echo "Priority: optional" >> kubsh-package/DEBIAN/control
 	echo "Section: utils" >> kubsh-package/DEBIAN/control
 	echo "Description: Custom shell kubsh" >> kubsh-package/DEBIAN/control
-	echo "Depends: libfuse3-3, libreadline8" >> kubsh-package/DEBIAN/control
+	echo "Depends: libfuse3-3, libreadline8" >> kubsh-package/DEBIAN/control  # Keep as-is (valid for Ubuntu)
 
 	dpkg-deb --build kubsh-package $(DEB_FILE)
 	@echo "Package created: $(DEB_FILE)"
+
 
 # ================= Test in Docker =================
 
 test: deb
 	@echo "Running tests in Docker..."
-	docker run -it --rm --privileged --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined \
+	docker run -it --rm \
+		--privileged \
+		--device /dev/fuse \
+		--cap-add SYS_ADMIN \
+		--security-opt apparmor:unconfined \
 		-v $(CURDIR)/$(DEB_FILE):/mnt/kubsh.deb \
-		tyvik/kubsh_test:master \
-		bash -c "apt update && apt install -y libfuse3-3 libreadline8 && dpkg -i /mnt/kubsh.deb && pytest /opt"
+		ubuntu:24.04  # Changed from tyvik/kubsh_test:master → Ubuntu image
+		bash -c " \
+			apt update && \
+			apt install -y --fix-missing libfuse3-3 libreadline8 && \  # Added --fix-missing
+			dpkg -i /mnt/kubsh.deb && \
+			pytest /opt \
+		"
 
 # ================= Clean =================
 
